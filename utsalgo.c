@@ -14,6 +14,12 @@ struct playlist {
     struct playlist *next, *prev;
 };
 
+struct akun {
+    char username[30];
+    char password[30];
+    struct akun *next;
+};
+
 void cetakData(FILE *file, char baris[1000]) {
     char karakter;
     while (fgets(baris, sizeof(baris), file) != NULL) {
@@ -116,6 +122,55 @@ void searchSong(struct playlist *head, char keyword[50]) {
             }
 }
 
+void bacaDatabase(struct akun **head) {
+    FILE *file = fopen("database.txt", "r");
+    if (file == NULL) {
+        printf("Error membuka file database.\n");
+        return;
+    }
+
+    while (!feof(file)) {
+        struct akun *node = (struct akun*)malloc(sizeof(struct akun));
+        if (fscanf(file, "%s %s\n", node->username, node->password) != 2) {
+            free(node);
+            break;
+        }
+
+        node->next = *head;
+        *head = node;
+    }
+    fclose(file);
+}
+
+// Fungsi untuk menambahkan akun baru
+void tambahAkun(struct akun **head, const char *username, const char *password) {
+    struct akun *node = (struct akun*)malloc(sizeof(struct akun));
+    strcpy(node->username, username);
+    strcpy(node->password, password);
+    node->next = *head;
+    *head = node;
+
+    FILE *file = fopen("database.txt", "a");
+    if (file == NULL) {
+        printf("Error membuka file database.\n");
+        return;
+    }
+    fprintf(file, "%s#%s\n", username, password);
+    fclose(file);
+}
+
+// Fungsi untuk memeriksa keberadaan akun
+bool cekAkun(struct akun *head, const char *username, const char *password) {
+    struct akun *current = head;
+    while (current != NULL) {
+        if (strcmp(current->username, username) == 0 && strcmp(current->password, password) == 0) {
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
+}
+
 void displayExistingPlaylists() {
     system("cls");
     printf("--------------------Pilih Playlist---------------------\n");
@@ -199,10 +254,15 @@ int main() {
     char username[30];
     char password[30];
     char keyword[50];
+    int kondisi;
     int pilihHome;
     int pilihPlaylist;
 
+    struct akun *akunHead = NULL;
+
     srand(time(NULL)); 
+    
+    bacaDatabase(&akunHead);
 
     FILE *file = fopen("listlagu.txt", "r");
     if (file == NULL) {
@@ -239,11 +299,28 @@ int main() {
     printf("\n");
     fclose(file);
 
-    printf("===================Login=================\n");
+    printf("1. Belum punya akun? buat sekarang!\n");
+    printf("2. Sudah punya akun? login sekarang!\n");
+    printf("pilihan :"); scanf("%d", &kondisi);
+
+if (kondisi == 1) {
+    printf("================Register==============\n");
     printf("Username : ");
     scanf("%s", username);
     printf("\nPassword : ");
     scanf("%s", password);
+    tambahAkun(&akunHead, username, password);
+} else if (kondisi == 2) {
+    printf("================Login==============\n");
+    printf("Username : ");
+    scanf("%s", username);
+    printf("\nPassword : ");
+    scanf("%s", password);
+    if (!cekAkun(akunHead, username, password)) {
+        printf("Username atau password salah.\n");
+        return 1;
+    }
+}
 
     do {
         printf("===================Home==================\n");
