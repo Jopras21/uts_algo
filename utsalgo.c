@@ -90,7 +90,7 @@ void createPlaylist() {
 }
 
 void searchSong(struct playlist *head, char keyword[50]) {
-                printf("Enter keyword to search: ");
+            printf("Enter keyword to search: ");
             scanf("%s", keyword);
 
             bool found = false;
@@ -134,6 +134,7 @@ void displayExistingPlaylists() {
     } else {
         perror("Direktori tidak tersedia");
     }
+    
 }
 
 void deletePlaylistFromFile(const char *filename) {
@@ -181,13 +182,55 @@ void playlist(int pilihhome, int *pilihPlaylist) {
         scanf("%d", pilihPlaylist);
 
         if (*pilihPlaylist == 0) {
-            char filename[20];
+            char filename[50];
             printf("Masukkan nama file playlist yang ingin dihapus: ");
-            scanf("%s", filename);
+            scanf("%49s", filename);
             deletePlaylistFromFile(filename);
+        } else {
+            DIR *dir;
+            struct dirent *ent;
+            char playlistNames[50][50]; 
+            int count = 0;
+            if ((dir = opendir(".")) != NULL) {
+                while ((ent = readdir(dir)) != NULL) {
+                    if (strstr(ent->d_name, ".txt") != NULL) {
+                        strcpy(playlistNames[count], ent->d_name);
+                        count++;
+                    }
+                }
+                closedir(dir);
+            } else {
+                perror("Direktori tidak tersedia");
+                return;
+            }
+
+            if (*pilihPlaylist > 0 && *pilihPlaylist <= count) {
+                FILE *file = fopen(playlistNames[*pilihPlaylist - 1], "r");
+                if (file != NULL) {
+                    char buffer[100];
+                    printf("=========================================================================\n");
+                    printf("| %-30s | %-30s | %-30s | %-5s |\n", "Judul", "Penyanyi", "Album", "Tahun");
+                    printf("=========================================================================\n");
+                    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+                        char *judul = strtok(buffer, "#");
+                        char *penyanyi = strtok(NULL, "#");
+                        char *album = strtok(NULL, "#");
+                        char *tahun_str = strtok(NULL, "()");
+                        int tahun = atoi(tahun_str);
+                        printf("| %-30s | %-30s | %-30s | %-5d |\n", judul, penyanyi, album, tahun);
+                    }
+                    printf("=========================================================================\n");
+                    fclose(file);
+                } else {
+                    printf("Gagal membuka playlist.\n");
+                }
+            } else {
+                printf("Pilihan tidak valid.\n");
+            }
         }
     }
 }
+
 
 void playSong(struct playlist *song) {
     printf("\nNow Playing: %s\n", song->judul);
@@ -246,7 +289,7 @@ int main() {
     scanf("%s", password);
 
     do {
-        printf("===================Home==================\n");
+        printf("\n===================Home==================\n");
         printf(" Hello, %s\n", username       );
         printf("1. Search by Keyword\n");
         printf("2. Choose Playlist  \n");
@@ -319,10 +362,9 @@ int main() {
                 }
             }
         } else if (pilihHome == 5) {
-            printf("Exiting...\n");
-            break;
+            return;
         }
-    } while (pilihHome != 7);
+    } while (pilihHome != 5);
 
     // Free allocated memory
     struct playlist *current = head;
