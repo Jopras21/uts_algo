@@ -14,6 +14,13 @@ struct playlist {
     struct playlist *next, *prev;
 };
 
+void cetakData(FILE *file, char baris[1000]) {
+    char karakter;
+    while (fgets(baris, sizeof(baris), file) != NULL) {
+        printf("%s", baris);
+    }
+}
+
 void createCustomPlaylist() {
     char playlistName[50];
     printf("Masukkan nama playlist baru: ");
@@ -185,7 +192,7 @@ void playlist(int pilihhome, int *pilihPlaylist) {
 void playSong(struct playlist *song) {
     printf("\nNow Playing: %s\n", song->judul);
     printf("Artist: %s\n", song->penyanyi);
-    printf("Album: %s\n", song->album); // Added album
+    printf("Album: %s\n", song->album); 
 }
 
 int main() {
@@ -223,6 +230,13 @@ int main() {
             tail = node;
         }
     }
+    fclose(file);
+    char logo[] = "logo.txt";
+    char baris[1000];
+
+    file = fopen(logo, "r");
+    cetakData(file, baris);
+    printf("\n");
     fclose(file);
 
     printf("===================Login=================\n");
