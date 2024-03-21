@@ -308,9 +308,9 @@ void displayPlaylist(const char *playlistFilename) {
     FILE *file = fopen(playlistFilename, "r");
     if (file != NULL) {
         char buffer[100];
-        printf("================================================================================================\n");
+        printf("=============================================================================================================\n");
         printf("| %-30s | %-30s | %-35s | %-5s |\n", "Judul", "Penyanyi", "Album", "Tahun");
-        printf("================================================================================================\n");
+        printf("=============================================================================================================\n");
         while (fgets(buffer, sizeof(buffer), file) != NULL) {
             if (strstr(buffer, "zdatabase.txt") != NULL || strstr(buffer, "zlogo.txt") != NULL) {
                 continue;
@@ -322,7 +322,7 @@ void displayPlaylist(const char *playlistFilename) {
             int tahun = atoi(tahun_str);
             printf("| %-30s | %-30s | %-35s | %-5d |\n", judul, penyanyi, album, tahun);
         }
-        printf("===============================================================================================\n");
+        printf("============================================================================================================\n");
         fclose(file);
     } else {
         printf("Gagal membuka playlist.\n");
