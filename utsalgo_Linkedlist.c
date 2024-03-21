@@ -152,7 +152,7 @@ void searchSong(struct playlist *head, char keyword[50]) {
 }
 
 void readDatabase(struct akun **head) {
-    FILE *file = fopen("database.txt", "r");
+    FILE *file = fopen("zdatabase.txt", "r");
     if (file == NULL) {
         printf("Error membuka file database.\n");
         return;
@@ -179,7 +179,7 @@ void addAcc(struct akun **head, const char *username, const char *password) {
     node->next = *head;
     *head = node;
 
-    FILE *file = fopen("database.txt", "a");
+    FILE *file = fopen("zdatabase.txt", "a");
     if (file == NULL) {
         printf("Error membuka file database.\n");
         return;
@@ -210,7 +210,7 @@ void displayExistingPlaylists() {
     if ((dir = opendir(".")) != NULL) {
         int count = 0;
         while ((direct = readdir(dir)) != NULL) {
-            if (strstr(direct->d_name, ".txt") != NULL && strcmp(direct->d_name, "database.txt") != 0 && strcmp(direct->d_name, "logo.txt") != 0 ) {
+            if (strstr(direct->d_name, ".txt") != NULL && strcmp(direct->d_name, "zdatabase.txt") != 0 && strcmp(direct->d_name, "zlogo.txt") != 0 ) {
                 printf("%d. %s\n", ++count, direct->d_name);
             }
         }
@@ -222,7 +222,7 @@ void displayExistingPlaylists() {
 }
 
 void deletePlaylistFromFile(const char *filename) {
-    if (strcmp(filename, "database.txt") == 0 || strcmp(filename, "logo.txt") == 0) {
+    if (strcmp(filename, "zdatabase.txt") == 0 || strcmp(filename, "zlogo.txt") == 0) {
         printf("Tidak ada playlist dengan nama '%s' .\n", filename);
     } else {
         if (remove(filename) == 0) {
@@ -312,7 +312,7 @@ void displayPlaylist(const char *playlistFilename) {
         printf("| %-30s | %-30s | %-35s | %-5s |\n", "Judul", "Penyanyi", "Album", "Tahun");
         printf("================================================================================================\n");
         while (fgets(buffer, sizeof(buffer), file) != NULL) {
-            if (strstr(buffer, "database.txt") != NULL || strstr(buffer, "logo.txt") != NULL) {
+            if (strstr(buffer, "zdatabase.txt") != NULL || strstr(buffer, "zlogo.txt") != NULL) {
                 continue;
             }
             char *judul = strtok(buffer, "#");
@@ -517,7 +517,7 @@ int main() {
         }
     }
     fclose(file);
-    char logo[] = "logo.txt";
+    char logo[] = "zlogo.txt";
     char baris[1000];
 
     file = fopen(logo, "r");
