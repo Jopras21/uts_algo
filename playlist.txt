@@ -1,1 +1,2 @@
 joko#last of us#(2000)
+#    printf("Username atau password anda salah!");#cd "f:\VSC\code\github\uts_algo\" ; if ($?) { gcc#(6417112)
