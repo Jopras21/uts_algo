@@ -171,7 +171,6 @@ void readDatabase(struct akun **head) {
     fclose(file);
 }
 
-// Fungsi untuk menambahkan akun baru
 void addAcc(struct akun **head, const char *username, const char *password) {
     struct akun *node = (struct akun*)malloc(sizeof(struct akun));
     strcpy(node->username, username);
@@ -188,7 +187,6 @@ void addAcc(struct akun **head, const char *username, const char *password) {
     fclose(file);
 }
 
-// Fungsi untuk memeriksa keberadaan akun
 bool cekAkun(struct akun *head, const char *username, const char *password) {
     struct akun *current = head;
     while (current != NULL) {
@@ -256,7 +254,7 @@ void addSongToPlaylist(const char *playlistFilename) {
 
     printf("Masukkan tahun rilis: ");
     scanf("%d", &newSong.tahun);
-    getchar(); // Consume newline character left in input buffer
+    getchar(); 
 
     fprintf(file,"%s#%s#%s#(%d)\n", newSong.judul, newSong.penyanyi, newSong.album, newSong.tahun);
 
@@ -364,7 +362,7 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
             }
 
             if (*pilihPlaylist > 0 && *pilihPlaylist <= count) {
-                displayPlaylist(playlistNames[*pilihPlaylist - 1]); // Tampilkan isi playlist yang dipilih
+                displayPlaylist(playlistNames[*pilihPlaylist - 1]); 
             } else {
                 printf("Pilihan tidak valid.\n");
             }
@@ -443,12 +441,10 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
                     break;
                 }
                     case 2: {
-                        // Add Song to Playlist
                         addSongToPlaylist(playlistNames[*pilihPlaylist - 1]);
                         break;
                     }
                     case 3: {
-                        // Remove Song from Playlist
                         int songNumber;
                         printf("Masukkan nomor lagu yang ingin dihapus dari playlist: ");
                         scanf("%d", &songNumber);
@@ -456,7 +452,6 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
                         break;
                     }
                     case 4: {
-                        // Kembali ke Home
                         break;
                     }
                     default: {
@@ -605,7 +600,6 @@ int main() {
         }
     } while (pilihHome != 5);
 
-    // Free allocated memory
     struct playlist *current = head;
     while (current != NULL) {
         struct playlist *temp = current;
