@@ -47,6 +47,7 @@ if (kondisi == 1) {
         return main();
     }
 }
+}
 
 
     void createData(FILE *file, char baris[1000]) {
@@ -68,7 +69,7 @@ void createCustomPlaylist(char playlistNames[][50], int numPlaylists) {
     }
 }
 
-void createPlaylist() {
+void createPlaylist(char playlistNames[][50], int numPlaylists) {
     int songLength = 100;
     char titleLength = 50;
     char artistLength = 50;
@@ -84,7 +85,7 @@ void createPlaylist() {
     scanf("%d", &choice);
 
     if (choice == 1) {
-        createCustomPlaylist();
+        createCustomPlaylist(playlistNames, numPlaylists);
     }
 
     printf("Masukkan jumlah lagu yang ingin ditambahkan ke playlist: ");

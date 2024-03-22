@@ -75,6 +75,7 @@ void createPlayList() {
     int songLength = 100;
     char titleLength = 50;
     char artistLength = 50;
+    char albumLength = 50;
     int numSongs;
     FILE *file;
 
@@ -94,7 +95,7 @@ void createPlayList() {
     scanf("%d", &numSongs);
     getchar();
 
-    file = fopen("playlist.txt", "a");
+    file = fopen("playlist1.txt", "a");
 
     if (file == NULL) {
         printf("Gagal membuka file.\n");
@@ -110,14 +111,18 @@ void createPlayList() {
         fgets(playlist[i].penyanyi, artistLength, stdin);
         strtok(playlist[i].penyanyi, "\n");
 
+        printf("Masukkan judul untuk album lagu ke-%d: ", i + 1);
+        fgets(playlist[i].album, albumLength, stdin);
+        strtok(playlist[i].album, "\n");
+
         printf("Masukkan tahun rilis untuk lagu ke-%d: ", i + 1);
         scanf("%d", &playlist[i].tahun);
         getchar();
 
-        fprintf(file, "%s#%s#(%d)\n", playlist[i].judul, playlist[i].penyanyi, playlist[i].tahun);
+        fprintf(file, "%s#%s#%s#%d\n", playlist[i].judul, playlist[i].penyanyi, playlist[i].album, playlist[i].tahun);
     }
 
-    printf("Playlist berhasil ditambahkan ke file.\n");
+    printf("Playlist berhasil ditambahkan.\n");
 
     fclose(file);
 }
@@ -214,7 +219,6 @@ void displayExistingPlaylists() {
         while (fgets(line, sizeof(line), file)) {
             strtok(line, "\n");
 
-            // Cek apakah baris berakhiran dengan ".txt" dan bukan "zdatabase.txt" atau "zlogo.txt"
             if (endsWithTxt(line) && strcmp(line, "zdatabase.txt") != 0 && strcmp(line, "zlogo.txt") != 0 && strcmp(line, "files.txt") != 0) {
                 strncpy(playlists[count], line, strlen(line) - 4);
                 playlists[count][strlen(line) - 4] = '\0';
@@ -269,11 +273,12 @@ void addSongToPlaylist(const char *playlistFilename) {
     scanf("%d", &newSong.tahun);
     getchar();
 
-    fprintf(file,"%s#%s#%s#(%d)\n", newSong.judul, newSong.penyanyi, newSong.album, newSong.tahun);
+    fprintf(file,"%s#%s#%s#%d\n", newSong.judul, newSong.penyanyi, newSong.album, newSong.tahun);
 
     fclose(file);
 
     printf("Lagu berhasil ditambahkan ke playlist.\n");
+    
 }
 
 void removeSongFromPlaylist(const char *playlistFilename, int songNumber) {
