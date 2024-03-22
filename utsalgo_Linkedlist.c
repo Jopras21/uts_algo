@@ -61,14 +61,14 @@ void createCustomPlaylist() {
     printf("Masukkan nama playlist baru: ");
     scanf("%s", playlistName);
 
-    FILE *file = fopen(strcat(playlistName, ".txt"), "a");
-    if (file == NULL) {
+    FILE *ply = fopen(strcat(playlistName, ".txt"), "a");
+    if (ply == NULL) {
         printf("Gagal membuat playlist.\n");
         return;
     }
 
     printf("Playlist '%s' berhasil dibuat.\n", playlistName);
-    fclose(file);
+    fclose(ply);
 }
 
 void createPlaylist() {
@@ -76,7 +76,7 @@ void createPlaylist() {
     char titleLength = 50;
     char artistLength = 50;
     int numSongs;
-    FILE *file;
+    FILE *create;
 
     struct playlist playlist[songLength];
 
@@ -94,9 +94,9 @@ void createPlaylist() {
     scanf("%d", &numSongs);
     getchar();
 
-    file = fopen("playlist.txt", "a");
+    create = fopen("playlist.txt", "a");
 
-    if (file == NULL) {
+    if (create == NULL) {
         printf("Gagal membuka file.\n");
         return;
     }
@@ -114,12 +114,12 @@ void createPlaylist() {
         scanf("%d", &playlist[i].tahun);
         getchar();
 
-        fprintf(file, "%s#%s#(%d)\n", playlist[i].judul, playlist[i].penyanyi, playlist[i].tahun);
+        fprintf(create, "%s#%s#(%d)\n", playlist[i].judul, playlist[i].penyanyi, playlist[i].tahun);
     }
 
     printf("Playlist berhasil ditambahkan ke file.\n");
 
-    fclose(file);
+    fclose(create);
 }
 
 void searchSong(struct playlist *head, char keyword[50]) {
@@ -150,15 +150,15 @@ void searchSong(struct playlist *head, char keyword[50]) {
 }
 
 void readDatabase(struct akun **head) {
-    FILE *file = fopen("zdatabase.txt", "r");
-    if (file == NULL) {
+    FILE *data = fopen("zdatabase.txt", "r");
+    if (data == NULL) {
         printf("Error membuka file database.\n");
         return;
     }
 
-    while (!feof(file)) {
+    while (!feof(data)) {
         struct akun *node = (struct akun*)malloc(sizeof(struct akun));
-        if (fscanf(file, "%s %s\n", node->username, node->password) != 2) {
+        if (fscanf(data, "%s %s\n", node->username, node->password) != 2) {
             free(node);
             break;
         }
@@ -166,7 +166,7 @@ void readDatabase(struct akun **head) {
         node->next = *head;
         *head = node;
     }
-    fclose(file);
+    fclose(data);
 }
 
 void addAcc(struct akun **head, const char *username, const char *password) {
@@ -176,13 +176,13 @@ void addAcc(struct akun **head, const char *username, const char *password) {
     node->next = *head;
     *head = node;
 
-    FILE *file = fopen("zdatabase.txt", "a");
-    if (file == NULL) {
+    FILE *add = fopen("zdatabase.txt", "a");
+    if (add == NULL) {
         printf("Error membuka file database.\n");
         return;
     }
-    fprintf(file, "%s %s\n", username, password);
-    fclose(file);
+    fprintf(add, "%s %s\n", username, password);
+    fclose(add);
 }
 
 bool cekAkun(struct akun *head, const char *username, const char *password) {
@@ -229,9 +229,9 @@ void deletePlaylistFromFile(const char *filename) {
     }
 }
 
-void addSongToPlaylist(const char *playlistFilename) {
-    FILE *file = fopen(playlistFilename, "a");
-    if (file == NULL) {
+void addSongToPlaylist(const char *playlistName) {
+    FILE *song = fopen(playlistName, "a");
+    if (song == NULL) {
         printf("Gagal membuka playlist.\n");
         return;
     }
@@ -254,16 +254,16 @@ void addSongToPlaylist(const char *playlistFilename) {
     scanf("%d", &newSong.tahun);
     getchar(); 
 
-    fprintf(file,"%s#%s#%s#(%d)\n", newSong.judul, newSong.penyanyi, newSong.album, newSong.tahun);
+    fprintf(song,"%s#%s#%s#(%d)\n", newSong.judul, newSong.penyanyi, newSong.album, newSong.tahun);
 
-    fclose(file);
+    fclose(song);
 
     printf("Lagu berhasil ditambahkan ke playlist.\n");
 }
 
-void removeSongFromPlaylist(const char *playlistFilename, int songNumber) {
-    FILE *file = fopen(playlistFilename, "r");
-    if (file == NULL) {
+void removeSongFromPlaylist(const char *playlistName, int songNumber) {
+    FILE *rem = fopen(playlistName, "r");
+    if (rem == NULL) {
         printf("Gagal membuka playlist.\n");
         return;
     }
@@ -271,7 +271,7 @@ void removeSongFromPlaylist(const char *playlistFilename, int songNumber) {
     char tempFilename[] = "temp.txt";
     FILE *tempFile = fopen(tempFilename, "w");
     if (tempFile == NULL) {
-        fclose(file);
+        fclose(rem);
         printf("Gagal membuat file sementara.\n");
         return;
     }
@@ -279,18 +279,18 @@ void removeSongFromPlaylist(const char *playlistFilename, int songNumber) {
     char buffer[1000];
     int count = 0;
 
-    while (fgets(buffer, sizeof(buffer), file) != NULL) {
+    while (fgets(buffer, sizeof(buffer), rem) != NULL) {
         count++;
         if (count != songNumber) {
             fputs(buffer, tempFile);
         }
     }
 
-    fclose(file);
+    fclose(rem);
     fclose(tempFile);
 
-    if (remove(playlistFilename) == 0) {
-        if (rename(tempFilename, playlistFilename) == 0) {
+    if (remove(playlistName) == 0) {
+        if (rename(tempFilename, playlistName) == 0) {
             printf("Lagu berhasil dihapus dari playlist.\n");
         } else {
             printf("Gagal mengubah nama file.\n");
@@ -300,14 +300,14 @@ void removeSongFromPlaylist(const char *playlistFilename, int songNumber) {
     }
 }
 
-void displayPlaylist(const char *playlistFilename) {
-    FILE *file = fopen(playlistFilename, "r");
-    if (file != NULL) {
+void displayPlaylist(const char *playlistName) {
+    FILE *display = fopen(playlistName, "r");
+    if (display != NULL) {
         char buffer[100];
         printf("=============================================================================================================\n");
         printf("| %-30s | %-30s | %-35s | %-5s |\n", "Judul", "Penyanyi", "Album", "Tahun");
         printf("=============================================================================================================\n");
-        while (fgets(buffer, sizeof(buffer), file) != NULL) {
+        while (fgets(buffer, sizeof(buffer), display) != NULL) {
             if (strstr(buffer, "zdatabase.txt") != NULL || strstr(buffer, "zlogo.txt") != NULL) {
                 continue;
             }
@@ -319,7 +319,7 @@ void displayPlaylist(const char *playlistFilename) {
             printf("| %-30s | %-30s | %-35s | %-5d |\n", judul, penyanyi, album, tahun);
         }
         printf("============================================================================================================\n");
-        fclose(file);
+        fclose(display);
     } else {
         printf("Gagal membuka playlist.\n");
     }
