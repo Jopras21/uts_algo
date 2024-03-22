@@ -47,31 +47,28 @@ if (kondisi == 1) {
         return main();
     }
 }
-}
 
-void createData(FILE *file, char baris[1000]) {
-    char karakter;
-    while (fgets(baris, sizeof(baris), file) != NULL) {
-        printf("%s", baris);
+
+    void createData(FILE *file, char baris[1000]) {
+        char barisArray[1000]; // Define a new array to store each line of data
+        while (fgets(barisArray, sizeof(barisArray), file) != NULL) { // Use the new array to read data
+            printf("%s", barisArray); // Print each line from the new array
+        }
+    }
+
+void createCustomPlaylist(char playlistNames[][50], int numPlaylists) {
+    for (int i = 0; i < numPlaylists; i++) {
+        FILE *file = fopen(strcat(playlistNames[i], ".txt"), "a");
+        if (file == NULL) {
+            printf("Gagal membuat playlist '%s'.\n", playlistNames[i]);
+        } else {
+            printf("Playlist '%s' berhasil dibuat.\n", playlistNames[i]);
+            fclose(file);
+        }
     }
 }
 
-void createCustomPlaylist() {
-    char playlistName[50];
-    printf("Masukkan nama playlist baru: ");
-    scanf("%s", playlistName);
-
-    FILE *file = fopen(strcat(playlistName,""), "a");
-    if (file == NULL) {
-        printf("Gagal membuat playlist.\n");
-        return;
-    }
-
-    printf("Playlist '%s' berhasil dibuat.\n", playlistName);
-    fclose(file);
-}
-
-void createPlayList() {
+void createPlaylist() {
     int songLength = 100;
     char titleLength = 50;
     char artistLength = 50;
@@ -93,6 +90,8 @@ void createPlayList() {
     printf("Masukkan jumlah lagu yang ingin ditambahkan ke playlist: ");
     scanf("%d", &numSongs);
     getchar();
+
+    file = fopen("playlist.txt", "a");
 
     file = fopen("playlist.txt", "a");
 
@@ -150,7 +149,7 @@ void searchSong(struct playlist *head, char keyword[50]) {
 }
 
 void readDatabase(struct akun **head) {
-    FILE *file = fopen("zdatabase.txt", "r");
+    FILE *file = fopen("database.txt", "r");
     if (file == NULL) {
         printf("Error membuka file database.\n");
         return;
@@ -169,6 +168,7 @@ void readDatabase(struct akun **head) {
     fclose(file);
 }
 
+// Fungsi untuk menambahkan akun baru
 void addAcc(struct akun **head, const char *username, const char *password) {
     struct akun *node = (struct akun*)malloc(sizeof(struct akun));
     strcpy(node->username, username);
@@ -176,7 +176,7 @@ void addAcc(struct akun **head, const char *username, const char *password) {
     node->next = *head;
     *head = node;
 
-    FILE *file = fopen("zdatabase.txt", "a");
+    FILE *file = fopen("database.txt", "a");
     if (file == NULL) {
         printf("Error membuka file database.\n");
         return;
@@ -185,55 +185,38 @@ void addAcc(struct akun **head, const char *username, const char *password) {
     fclose(file);
 }
 
-bool cekAkun(struct akun *head, const char *username, const char *password) {
-    struct akun *current = head;
-    while (current != NULL) {
-        if (strcmp(current->username, username) == 0 && strcmp(current->password, password) == 0) {
+// Fungsi untuk memeriksa keberadaan akun
+bool cekAkunArray(struct akun *accounts[], int numAccounts, const char *username, const char *password) {
+    for (int i = 0; i < numAccounts; i++) {
+        if (strcmp(accounts[i]->username, username) == 0 && strcmp(accounts[i]->password, password) == 0) {
             return true;
         }
-        current = current->next;
     }
     return false;
 }
 
-int endsWithTxt(const char *str) {
-    int len = strlen(str);
-    return len >= 4 && strcmp(str + len - 4, ".txt") == 0;
-}
 
-void displayExistingPlaylists() {
-    char playlists[100][50];
-    int count = 0;
-
-    system("dir /b > files.txt");
-    FILE *file = fopen("files.txt", "r");
-    if (file != NULL) {
-        printf("Daftar Playlist:\n");
-
-        char line[256];
-        while (fgets(line, sizeof(line), file)) {
-            strtok(line, "\n");
-
-            // Cek apakah baris berakhiran dengan ".txt" dan bukan "zdatabase.txt" atau "zlogo.txt"
-            if (endsWithTxt(line) && strcmp(line, "zdatabase.txt") != 0 && strcmp(line, "zlogo.txt") != 0 && strcmp(line, "files.txt") != 0) {
-                strncpy(playlists[count], line, strlen(line) - 4);
-                playlists[count][strlen(line) - 4] = '\0';
-                count++;
+void displayExistingPlaylistsArray(char *existingPlaylists[], int *playlistCount) {
+    DIR *dir;
+    struct dirent *direct;
+    if ((dir = opendir(".")) != NULL) {
+        *playlistCount = 0; // Initialize the count of playlists
+        while ((direct = readdir(dir)) != NULL) {
+            if (strstr(direct->d_name, ".txt") != NULL && strcmp(direct->d_name, "database.txt") != 0 && strcmp(direct->d_name, "logo.txt") != 0 ) {
+                // Store the playlist name in the array
+                existingPlaylists[*playlistCount] = direct->d_name;
+                (*playlistCount)++; // Increment the count of playlists
             }
         }
-        fclose(file);
-        remove("files.txt");
-
-        for (int i = 0; i < count; i++) {
-            printf("%d. %s\n", i + 1, playlists[i]);
-        }
+        closedir(dir);
     } else {
         perror("Direktori tidak tersedia");
     }
 }
 
+
 void deletePlaylistFromFile(const char *filename) {
-    if (strcmp(filename, "zdatabase.txt") == 0 || strcmp(filename, "zlogo.txt") == 0) {
+    if (strcmp(filename, "database.txt") == 0 || strcmp(filename, "logo.txt") == 0) {
         printf("Tidak ada playlist dengan nama '%s' .\n", filename);
     } else {
         if (remove(filename) == 0) {
@@ -267,7 +250,7 @@ void addSongToPlaylist(const char *playlistFilename) {
 
     printf("Masukkan tahun rilis: ");
     scanf("%d", &newSong.tahun);
-    getchar();
+    getchar(); // Consume newline character left in input buffer
 
     fprintf(file,"%s#%s#%s#(%d)\n", newSong.judul, newSong.penyanyi, newSong.album, newSong.tahun);
 
@@ -319,12 +302,11 @@ void displayPlaylist(const char *playlistFilename) {
     FILE *file = fopen(playlistFilename, "r");
     if (file != NULL) {
         char buffer[100];
-        int no = 0;
-        printf("===============================================================================================================================\n");
-        printf("| %-2s | %-30s | %-30s | %-43s | %-7s |\n", "No", "Judul", "Penyanyi", "Album", "Tahun");
-        printf("===============================================================================================================================\n");
+        printf("================================================================================================\n");
+        printf("| %-30s | %-30s | %-35s | %-5s |\n", "Judul", "Penyanyi", "Album", "Tahun");
+        printf("================================================================================================\n");
         while (fgets(buffer, sizeof(buffer), file) != NULL) {
-            if (strstr(buffer, "zdatabase.txt") != NULL || strstr(buffer, "zlogo.txt") != NULL) {
+            if (strstr(buffer, "database.txt") != NULL || strstr(buffer, "logo.txt") != NULL) {
                 continue;
             }
             char *judul = strtok(buffer, "#");
@@ -332,16 +314,15 @@ void displayPlaylist(const char *playlistFilename) {
             char *album = strtok(NULL, "#");
             char *tahun_str = strtok(NULL, "()");
             int tahun = atoi(tahun_str);
-            printf("| %-2d | %-30s | %-30s | %-43s | %-7d |\n", no,  judul, penyanyi, album, tahun);
-            no++;
+            printf("| %-30s | %-30s | %-35s | %-5d |\n", judul, penyanyi, album, tahun);
         }
-        printf("===============================================================================================================================\n");
+        printf("===============================================================================================\n");
         fclose(file);
     } else {
-        printf("Gagal membuka playlist '%s'.\n", playlistFilename);
-        return;
+        printf("Gagal membuka playlist.\n");
     }
 }
+
 
 void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct playlist *tail) {
     char playlistNames[50][50];
@@ -361,6 +342,7 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
         } else {
             DIR *dir;
             struct dirent *direct;
+            char playlistNames[50][50];
             int count = 0;
             if ((dir = opendir(".")) != NULL) {
                 while ((direct = readdir(dir)) != NULL) {
@@ -376,141 +358,118 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
             }
 
             if (*pilihPlaylist > 0 && *pilihPlaylist <= count) {
-                displayPlaylist(playlistNames[*pilihPlaylist - 1]);
+                displayPlaylist(playlistNames[*pilihPlaylist - 1]); // Tampilkan isi playlist yang dipilih
             } else {
                 printf("Pilihan tidak valid.\n");
-                return;
             }
         }
 
-        int playlistOption;
-        printf("Pilih opsi:\n");
-        printf("1. Putar Lagu\n");
-        printf("2. Tambahkan Lagu ke Playlist\n");
-        printf("3. Hapus Lagu dari Playlist\n");
-        printf("4. Kembali ke Home\n");
-        printf("Pilihan: ");
-        scanf("%d", &playlistOption);
+                int playlistOption;
+                printf("Pilih opsi:\n");
+                printf("1. Play Song\n");
+                printf("2. Add Song to Playlist\n");
+                printf("3. Remove Song from Playlist\n");
+                printf("4. Kembali ke Home\n");
+                printf("Pilihan: ");
+                scanf("%d", &playlistOption);
 
-        switch (playlistOption) {
-            case 1: {
-                int songNumber;
-                printf("Masukkan nomor lagu yang ingin diputar: ");
-                scanf("%d", &songNumber);
+                switch (playlistOption) {
+                    case 1: {
+                    int songNumber;
+                    printf("Masukkan nomor lagu yang ingin diputar: ");
+                    scanf("%d", &songNumber);
 
-                FILE *file = fopen(playlistNames[*pilihPlaylist - 1], "r");
-                if (file != NULL) {
-                    char buffer[1000];
-                    int count = 0;
-                    struct playlist *current = head;
-                    while (current != NULL) {
-                        count++;
-                        if (count == songNumber) {
-                            printf("\nSedang Diputar: %s\n", current->judul);
-                            printf("Artis: %s\n", current->penyanyi);
-                            printf("Album: %s\n", current->album);
-                            playSong(current);
-                            sleep(1);
-                            break;
-                        }
-                        current = current->next;
-                    }
+                    FILE *file = fopen(playlistNames[*pilihPlaylist - 1], "r");
+                    if (file != NULL) {
+                        char buffer[1000];
+                        int count = 0;
+                        struct playlist *current = head;
                         while (current != NULL) {
-                            printf("\n[Menu Player]\n");
-                            printf("1. Next Song\n");
-                            printf("2. Previous Song\n");
-                            printf("3. Stop\n");
-                            printf("4. Shuffle\n");
-                            printf("Pilihan: ");
-                            int kontrol;
-                            scanf("%d", &kontrol);
+                            count++;
+                            if (count == songNumber) {
+                                printf("\nNow Playing: %s\n", current->judul);
+                                printf("Artist: %s\n", current->penyanyi);
+                                printf("Album: %s\n", current->album);
+                                playSong(current);
+                                sleep(1);
+                                printf("\n[Menu Player]\n");
+                                printf("1. Next Song\n");
+                                printf("2. Previous Song\n");
+                                printf("3. Stop\n");
+                                printf("4. Shuffle\n");
+                                printf("Pilihan: ");
+                                int kontrol;
+                                scanf("%d", &kontrol);
 
-                            if (kontrol == 1) {
-                                current = current->next;
-                                if (current == NULL) {
-                                    current = head;
+                                if (kontrol == 1) {
+                                    current = current->next;
+                                    if (current == NULL) {
+                                        current = head;
+                                    }
+                                    playSong(current);
+                                    sleep(1);
+                                } else if (kontrol == 2) {
+                                    current = current->prev;
+                                    if (current == NULL) {
+                                        current = tail;
+                                    }
+                                    playSong(current);
+                                    sleep(1);
+                                } else if (kontrol == 3) {
+                                    printf("Song playback stopped.\n");
+                                    break;
+                                } else if (kontrol == 4) {
+                                    // Shuffle playlist
+                                    // You can implement shuffle functionality here
+                                    // or call a function to handle shuffling
+                                    printf("Shuffling playlist...\n");
+                                } else {
+                                    printf("Invalid choice.\n");
                                 }
-                                playSong(current);
-                                sleep(1);
-                            } else if (kontrol == 2) {
-                                current = current->prev;
-                                if (current == NULL) {
-                                    current = tail;
-                                }
-                                playSong(current);
-                                sleep(1);
-                            } else if (kontrol == 3) {
-                                printf("Song playback stopped.\n");
                                 break;
-                            } else if (kontrol == 4) {
-                                // Shuffle playlist
-                                // You can implement shuffle functionality here
-                                // or call a function to handle shuffling
-                                // For now, let's just print a message
-                                printf("Shuffling playlist...\n");
-                            } else {
-                                printf("Invalid choice.\n");
                             }
+                            current = current->next;
                         }
                         fclose(file);
-                } else {
-                    printf("Gagal membuka playlist.\n");
+                    } else {
+                        printf("Gagal membuka playlist.\n");
+                    }
+                    break;
                 }
-                break;
-            }
-
-            case 2: {
-                addSongToPlaylist(playlistNames[*pilihPlaylist - 1]);
-                break;
-            }
-
-            case 3: {
-                int songNumber;
-                printf("Masukkan nomor lagu yang ingin dihapus dari playlist: ");
-                scanf("%d", &songNumber);
-                removeSongFromPlaylist(playlistNames[*pilihPlaylist - 1], songNumber);
-                break;
-            }
-
-            case 4: {
-                break;
-            }
-
-            default: {
+                    case 2: {
+                        // Add Song to Playlist
+                        addSongToPlaylist(playlistNames[*pilihPlaylist - 1]);
+                        break;
+                    }
+                    case 3: {
+                        // Remove Song from Playlist
+                        int songNumber;
+                        printf("Masukkan nomor lagu yang ingin dihapus dari playlist: ");
+                        scanf("%d", &songNumber);
+                        removeSongFromPlaylist(playlistNames[*pilihPlaylist - 1], songNumber);
+                        break;
+                    }
+                    case 4: {
+                        // Kembali ke Home
+                        break;
+                    }
+                    default: {
+                        printf("Pilihan tidak valid.\n");
+                        break;
+                    }
+                }
+            } else {
                 printf("Pilihan tidak valid.\n");
-                break;
             }
         }
-    } else {
-        printf("Pilihan tidak valid.\n");
-    }
-}
+
+
+
 
 void playSong(struct playlist *song) {
     printf("\nNow Playing: %s\n", song->judul);
     printf("Artist: %s\n", song->penyanyi);
     printf("Album: %s\n", song->album);
-}
-
-void playSongFromPlaylist(char *playlistName, int songNumber) {
-    FILE *file = fopen(playlistName, "r");
-    if (file != NULL) {
-        char buffer[1000];
-        int count = 0;
-        while (fgets(buffer, sizeof(buffer), file)) {
-            count++;
-            if (count == songNumber) {
-                printf("\nLagu Sedang Diputar:\n");
-                printf("%s", buffer);
-                // Add your play functionality here
-                printf("Playing song %s...\n", buffer); // Contoh: Menampilkan informasi lagu yang diputar
-                break;
-            }
-        }
-        fclose(file);
-    } else {
-        printf("Gagal membuka playlist.\n");
-    }
 }
 
 int main() {
@@ -552,7 +511,7 @@ int main() {
         }
     }
     fclose(file);
-    char logo[] = "zlogo.txt";
+    char logo[] = "logo.txt";
     char baris[1000];
 
     file = fopen(logo, "r");
@@ -568,9 +527,8 @@ int main() {
         printf("1. Search by Keyword\n");
         printf("2. Choose Playlist  \n");
         printf("3. Display All Song \n");
-        printf("4. Create playlist \n");
-        printf("5. Play Song        \n");
-        printf("6. Logout\n");
+        printf("4. Play Song        \n");
+        printf("5. Logout\n");
         printf("Pilihan : ");
         scanf("%d", &pilihHome);
 
@@ -593,8 +551,6 @@ int main() {
                 current = current->next;
             }
         } else if (pilihHome == 4) {
-            createPlayList();
-        } else if (pilihHome == 5) {
             struct playlist *current = head;
             if (current != NULL) {
                 playSong(current);
@@ -641,8 +597,9 @@ int main() {
         } else if (pilihHome == 5) {
             return;
         }
-    } while (pilihHome != 6);
+    } while (pilihHome != 5);
 
+    // Free allocated memory
     struct playlist *current = head;
     while (current != NULL) {
         struct playlist *temp = current;
