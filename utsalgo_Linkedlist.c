@@ -96,8 +96,6 @@ void createPlaylist() {
 
     file = fopen("playlist.txt", "a");
 
-    file = fopen("playlist.txt", "a");
-
     if (file == NULL) {
         printf("Gagal membuka file.\n");
         return;
