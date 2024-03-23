@@ -75,10 +75,12 @@ void createPlayList() {
     int songLength = 100;
     char titleLength = 50;
     char artistLength = 50;
+    char albumLength = 50;
     int numSongs;
     FILE *file;
 
-    struct playlist playlist[songLength];
+    struct playlist *head = NULL;
+    struct playlist *tail = NULL;
 
     printf("1. Buat playlist baru\n");
     printf("2. Tambahkan lagu ke playlist yang ada\n");
@@ -102,19 +104,36 @@ void createPlayList() {
     }
 
     for (int i = 0; i < numSongs; i++) {
+        struct playlist *node = (struct playlist*)malloc(sizeof(struct playlist));
+        
         printf("Masukkan judul lagu ke-%d: ", i + 1);
-        fgets(playlist[i].judul, titleLength, stdin);
-        strtok(playlist[i].judul, "\n");
+        fgets(node->judul, titleLength, stdin);
+        strtok(node->judul, "\n");
 
         printf("Masukkan nama penyanyi untuk lagu ke-%d: ", i + 1);
-        fgets(playlist[i].penyanyi, artistLength, stdin);
-        strtok(playlist[i].penyanyi, "\n");
+        fgets(node->penyanyi, artistLength, stdin);
+        strtok(node->penyanyi, "\n");
+
+        printf("Masukkan nama penyanyi untuk lagu ke-%d: ", i + 1);
+        fgets(node->album, albumLength, stdin);
+        strtok(node->album, "\n");
 
         printf("Masukkan tahun rilis untuk lagu ke-%d: ", i + 1);
-        scanf("%d", &playlist[i].tahun);
+        scanf("%d", &node->tahun);
         getchar();
 
-        fprintf(file, "%s#%s#(%d)\n", playlist[i].judul, playlist[i].penyanyi, playlist[i].tahun);
+        node->next = NULL;
+        node->prev = tail;
+
+        if (head == NULL) {
+            head = node;
+            tail = node;
+        } else {
+            tail->next = node;
+            tail = node;
+        }
+
+        fprintf(file, "%s#%s#%d\n", node->judul, node->penyanyi, node-> album, node->tahun);
     }
 
     printf("Playlist berhasil ditambahkan ke file.\n");
@@ -213,8 +232,6 @@ void displayExistingPlaylists() {
         char line[256];
         while (fgets(line, sizeof(line), file)) {
             strtok(line, "\n");
-
-            // Cek apakah baris berakhiran dengan ".txt" dan bukan "zdatabase.txt" atau "zlogo.txt"
             if (endsWithTxt(line) && strcmp(line, "zdatabase.txt") != 0 && strcmp(line, "zlogo.txt") != 0 && strcmp(line, "files.txt") != 0) {
                 strncpy(playlists[count], line, strlen(line) - 4);
                 playlists[count][strlen(line) - 4] = '\0';
@@ -245,6 +262,7 @@ void deletePlaylistFromFile(const char *filename) {
 }
 
 void addSongToPlaylist(const char *playlistFilename) {
+    int c;
     FILE *file = fopen(playlistFilename, "a");
     if (file == NULL) {
         printf("Gagal membuka playlist.\n");
@@ -253,7 +271,7 @@ void addSongToPlaylist(const char *playlistFilename) {
 
     struct playlist newSong;
 
-    printf("Masukkan judul lagu: ");
+    printf("Masukkan judul lagu: "); (fflush(stdin));
     fgets(newSong.judul, sizeof(newSong.judul), stdin);
     strtok(newSong.judul, "\n");
 
@@ -267,9 +285,8 @@ void addSongToPlaylist(const char *playlistFilename) {
 
     printf("Masukkan tahun rilis: ");
     scanf("%d", &newSong.tahun);
-    getchar();
 
-    fprintf(file,"%s#%s#%s#(%d)\n", newSong.judul, newSong.penyanyi, newSong.album, newSong.tahun);
+    fprintf(file,"%s#%s#%s#%d\n", newSong.judul, newSong.penyanyi, newSong.album, newSong.tahun);
 
     fclose(file);
 
@@ -319,7 +336,7 @@ void displayPlaylist(const char *playlistFilename) {
     FILE *file = fopen(playlistFilename, "r");
     if (file != NULL) {
         char buffer[100];
-        int no = 0;
+        int no = 1;
         printf("===============================================================================================================================\n");
         printf("| %-2s | %-30s | %-30s | %-43s | %-7s |\n", "No", "Judul", "Penyanyi", "Album", "Tahun");
         printf("===============================================================================================================================\n");
@@ -343,8 +360,9 @@ void displayPlaylist(const char *playlistFilename) {
     }
 }
 
-void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct playlist *tail, bool repeatplaylist) {
+void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct playlist *tail) {
     char playlistNames[50][50];
+    int playlistOption;
     if (pilihhome == 2) {
         system("cls");
         printf("--------------------Pilih Playlist---------------------\n");
@@ -383,7 +401,6 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
             }
         }
 
-        int playlistOption;
         printf("Pilih opsi:\n");
         printf("1. Putar Lagu\n");
         printf("2. Tambahkan Lagu ke Playlist\n");
@@ -420,7 +437,7 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
                             printf("1. Next Song\n");
                             printf("2. Previous Song\n");
                             printf("3. Stop\n");
-                            printf("4. Repeat\n");
+                            printf("4. Shuffle\n");
                             printf("Pilihan: ");
                             int kontrol;
                             scanf("%d", &kontrol);
@@ -443,7 +460,7 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
                                 printf("Song playback stopped.\n");
                                 break;
                             } else if (kontrol == 4) {
-                                repeatPlaylist = !repeatPlaylist;
+                                shufflePlaylist(head);
                             } else {
                                 printf("Invalid choice.\n");
                             }
@@ -521,37 +538,51 @@ void shuffle(int *array, int n) {
 }
 
 void shufflePlaylist(struct playlist *head) {
-    // Menghitung jumlah lagu dalam playlist
     int count = 0;
+    int i = 0;
     struct playlist *current = head;
     while (current != NULL) {
         count++;
         current = current->next;
     }
 
-    // Membuat array indeks lagu
-    int *indices = (int *)malloc(count * sizeof(int));
-    current = head;
-    int i = 0;
+    int *indices = (int *)malloc(count * sizeof(int)); 
+    if (indices == NULL) {
+            int i = 0;
+    }
+
     while (current != NULL) {
-        indices[i++] = i;
+        indices[i] = i + 1;
+        i++;
         current = current->next;
     }
 
-    // Melakukan shuffle terhadap array indeks
     shuffle(indices, count);
 
-    // Mengubah urutan lagu dalam playlist sesuai dengan array indeks yang sudah diacak
     current = head;
     i = 0;
-    while (current != NULL) {
-        // Implementasi swap dengan node lain menggunakan teknik swap nilai
+    while (current != NULL && i < count) { 
         struct playlist *temp = current;
         current = current->next;
-        temp->next = current->next;
-        current->prev = temp->prev;
-        current->next = temp;
-        temp->prev = current;
+        struct playlist *swapNode = head;
+        int j;
+        for (j = 0; j < indices[i] - 1; j++) {
+            swapNode = swapNode->next;
+        }
+        if (temp != swapNode) { 
+            if (temp->prev != NULL) {
+                temp->prev->next = temp->next;
+            }
+            if (temp->next != NULL) {
+                temp->next->prev = temp->prev;
+            }
+            if (swapNode->next != NULL) {
+                swapNode->next->prev = temp;
+            }
+            temp->next = swapNode->next;
+            temp->prev = swapNode;
+            swapNode->next = temp;
+        }
         i++;
     }
 
@@ -565,8 +596,6 @@ int main() {
     int kondisi;
     int pilihHome;
     int pilihPlaylist;
-
-    bool repeatPlaylist = false;
 
     struct akun *akunHead = NULL;
 
@@ -653,7 +682,7 @@ int main() {
                 printf("1. Next Song\n");
                 printf("2. Previous Song\n");
                 printf("3. Stop\n");
-                printf("4. Repeat\n");
+                printf("4. Shuffle\n");
                 printf("Pilihan: ");
                 int kontrol;
                 scanf("%d", &kontrol);
@@ -676,7 +705,7 @@ int main() {
                     printf("Song playback stopped.\n");
                     break;
                 } else if (kontrol == 4) {
-                    repeatPlaylist = !repeatPlaylist;
+                    shufflePlaylist(head);
                 } else {
                     printf("Invalid choice.\n");
                 }
@@ -684,9 +713,7 @@ int main() {
         } else if (pilihHome == 5) {
             return 0;
         }
-        printf("Apakah Anda ingin mengulang playlist? (1: Ya / 0: Tidak): ");
-        scanf("%d", &repeatPlaylist);
-} while (repeatPlaylist);
+    } while (pilihHome != 6);
 
     struct playlist *current = head;
     while (current != NULL) {
