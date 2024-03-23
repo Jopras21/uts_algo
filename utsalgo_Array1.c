@@ -47,12 +47,13 @@ if (kondisi == 1) {
         return main();
     }
 }
+}
 
 
     void createData(FILE *file, char baris[1000]) {
-        char barisArray[1000]; // Define a new array to store each line of data
-        while (fgets(barisArray, sizeof(barisArray), file) != NULL) { // Use the new array to read data
-            printf("%s", barisArray); // Print each line from the new array
+        char barisArray[1000]; 
+        while (fgets(barisArray, sizeof(barisArray), file) != NULL) { 
+            printf("%s", barisArray); 
         }
     }
 
@@ -84,7 +85,7 @@ void createPlaylist() {
     scanf("%d", &choice);
 
     if (choice == 1) {
-        createCustomPlaylist();
+        createCustomPlaylist(playlistNames, numPlaylists);
     }
 
     printf("Masukkan jumlah lagu yang ingin ditambahkan ke playlist: ");
@@ -482,13 +483,83 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
             }
         }
 
-
-
-
 void playSong(struct playlist *song) {
     printf("\nNow Playing: %s\n", song->judul);
     printf("Artist: %s\n", song->penyanyi);
     printf("Album: %s\n", song->album);
+}
+
+void shuffle(int *array, int n) {
+    if (n > 1) {
+        int i;
+        for (i = 0; i < n - 1; i++) {
+            int j = i + rand() / (RAND_MAX / (n - i) + 1);
+            int temp = array[j];
+            array[j] = array[i];
+            array[i] = temp;
+        }
+    }
+}
+
+void shufflePlaylist(struct playlist *head, const char *filename) {
+    FILE *file = fopen("listlagu.txt", "r");
+    if (file == NULL) {
+        printf("Gagal membuka file.\n");
+        return;
+    }
+
+    char line[100];
+    int count = 0;
+    while (fgets(line, sizeof(line), file) != NULL) {
+        count++;
+    }
+    rewind(file);
+
+    int *indices = (int *)malloc(count * sizeof(int));
+    if (indices == NULL) {
+        printf("Gagal alokasi memori.\n");
+        fclose(file);
+        return;
+    }
+
+    int i = 0;
+    while (fgets(line, sizeof(line), file) != NULL) {
+        indices[i] = i + 1;
+        i++;
+    }
+
+    fclose(file);
+
+    shuffle(indices, count);
+
+    struct playlist *current = head;
+    i = 0;
+    while (current != NULL && i < count) {
+        struct playlist *temp = current;
+        current = current->next;
+        struct playlist *swapNode = head;
+        int j;
+        for (j = 0; j < indices[i] - 1; j++) {
+            swapNode = swapNode->next;
+        }
+        if (temp != swapNode) {
+            if (temp->prev != NULL) {
+                temp->prev->next = temp->next;
+            }
+            if (temp->next != NULL) {
+                temp->next->prev = temp->prev;
+            }
+            if (swapNode->next != NULL) {
+                swapNode->next->prev = temp;
+            }
+            temp->next = swapNode->next;
+            temp->prev = swapNode;
+            swapNode->next = temp;
+        }
+        i++;
+    }
+
+    free(indices);
 }
 
 int main() {
@@ -604,10 +675,7 @@ int main() {
                     printf("Song playback stopped.\n");
                     break;
                 } else if (kontrol == 4) {
-                    // Shuffle playlist
-                    // You can implement shuffle functionality here
-                    // or call a function to handle shuffling
-                    // For now, let's just print a message
+
                     printf("Shuffling playlist...\n");
                 } else {
                     printf("Invalid choice.\n");
@@ -618,7 +686,6 @@ int main() {
         }
     } while (pilihHome != 5);
 
-    // Free allocated memory
     struct playlist *current = head;
     while (current != NULL) {
         struct playlist *temp = current;
