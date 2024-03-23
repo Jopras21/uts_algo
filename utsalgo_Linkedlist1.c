@@ -343,7 +343,7 @@ void displayPlaylist(const char *playlistFilename) {
     }
 }
 
-void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct playlist *tail, bool repeatplaylist) {
+void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct playlist *tail) {
     char playlistNames[50][50];
     if (pilihhome == 2) {
         system("cls");
@@ -420,7 +420,7 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
                             printf("1. Next Song\n");
                             printf("2. Previous Song\n");
                             printf("3. Stop\n");
-                            printf("4. Repeat\n");
+                            printf("4. Shuffle\n");
                             printf("Pilihan: ");
                             int kontrol;
                             scanf("%d", &kontrol);
@@ -443,7 +443,11 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
                                 printf("Song playback stopped.\n");
                                 break;
                             } else if (kontrol == 4) {
-                                repeatPlaylist = !repeatPlaylist;
+                                // Shuffle playlist
+                                // You can implement shuffle functionality here
+                                // or call a function to handle shuffling
+                                // For now, let's just print a message
+                                printf("Shuffling playlist...\n");
                             } else {
                                 printf("Invalid choice.\n");
                             }
@@ -498,7 +502,8 @@ void playSongFromPlaylist(char *playlistName, int songNumber) {
             if (count == songNumber) {
                 printf("\nLagu Sedang Diputar:\n");
                 printf("%s", buffer);
-                printf("Playing song %s...\n", buffer); 
+                // Add your play functionality here
+                printf("Playing song %s...\n", buffer); // Contoh: Menampilkan informasi lagu yang diputar
                 break;
             }
         }
@@ -506,56 +511,6 @@ void playSongFromPlaylist(char *playlistName, int songNumber) {
     } else {
         printf("Gagal membuka playlist.\n");
     }
-}
-
-void shuffle(int *array, int n) {
-    if (n > 1) {
-        int i;
-        for (i = 0; i < n - 1; i++) {
-            int j = i + rand() / (RAND_MAX / (n - i) + 1);
-            int temp = array[j];
-            array[j] = array[i];
-            array[i] = temp;
-        }
-    }
-}
-
-void shufflePlaylist(struct playlist *head) {
-    // Menghitung jumlah lagu dalam playlist
-    int count = 0;
-    struct playlist *current = head;
-    while (current != NULL) {
-        count++;
-        current = current->next;
-    }
-
-    // Membuat array indeks lagu
-    int *indices = (int *)malloc(count * sizeof(int));
-    current = head;
-    int i = 0;
-    while (current != NULL) {
-        indices[i++] = i;
-        current = current->next;
-    }
-
-    // Melakukan shuffle terhadap array indeks
-    shuffle(indices, count);
-
-    // Mengubah urutan lagu dalam playlist sesuai dengan array indeks yang sudah diacak
-    current = head;
-    i = 0;
-    while (current != NULL) {
-        // Implementasi swap dengan node lain menggunakan teknik swap nilai
-        struct playlist *temp = current;
-        current = current->next;
-        temp->next = current->next;
-        current->prev = temp->prev;
-        current->next = temp;
-        temp->prev = current;
-        i++;
-    }
-
-    free(indices);
 }
 
 int main() {
@@ -566,15 +521,13 @@ int main() {
     int pilihHome;
     int pilihPlaylist;
 
-    bool repeatPlaylist = false;
-
     struct akun *akunHead = NULL;
 
     srand(time(NULL));
 
     FILE *file = fopen("listlagu.txt", "r");
     if (file == NULL) {
-        printf("Error membuka file.\n");
+        printf("Error opening the file.\n");
         return 1;
     }
 
@@ -653,7 +606,7 @@ int main() {
                 printf("1. Next Song\n");
                 printf("2. Previous Song\n");
                 printf("3. Stop\n");
-                printf("4. Repeat\n");
+                printf("4. Shuffle\n");
                 printf("Pilihan: ");
                 int kontrol;
                 scanf("%d", &kontrol);
@@ -676,17 +629,19 @@ int main() {
                     printf("Song playback stopped.\n");
                     break;
                 } else if (kontrol == 4) {
-                    repeatPlaylist = !repeatPlaylist;
+                    // Shuffle playlist
+                    // You can implement shuffle functionality here
+                    // or call a function to handle shuffling
+                    // For now, let's just print a message
+                    printf("Shuffling playlist...\n");
                 } else {
                     printf("Invalid choice.\n");
                 }
             }
         } else if (pilihHome == 5) {
-            return 0;
+            return;
         }
-        printf("Apakah Anda ingin mengulang playlist? (1: Ya / 0: Tidak): ");
-        scanf("%d", &repeatPlaylist);
-} while (repeatPlaylist);
+    } while (pilihHome != 6);
 
     struct playlist *current = head;
     while (current != NULL) {
