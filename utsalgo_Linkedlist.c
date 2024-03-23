@@ -460,7 +460,7 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *head, struct p
                                 printf("Song playback stopped.\n");
                                 break;
                             } else if (kontrol == 4) {
-                                shufflePlaylist(head);
+                                shufflePlaylist(&head, "listlagu.txt");
                             } else {
                                 printf("Invalid choice.\n");
                             }
@@ -537,31 +537,40 @@ void shuffle(int *array, int n) {
     }
 }
 
-void shufflePlaylist(struct playlist *head) {
+void shufflePlaylist(struct playlist *head, const char *filename) {
+    FILE *file = fopen("listlagu.txt", "r");
+    if (file == NULL) {
+        printf("Gagal membuka file.\n");
+        return;
+    }
+
+    char line[100];
     int count = 0;
-    int i = 0;
-    struct playlist *current = head;
-    while (current != NULL) {
+    while (fgets(line, sizeof(line), file) != NULL) {
         count++;
-        current = current->next;
     }
+    rewind(file);
 
-    int *indices = (int *)malloc(count * sizeof(int)); 
+    int *indices = (int *)malloc(count * sizeof(int));
     if (indices == NULL) {
-            int i = 0;
+        printf("Gagal alokasi memori.\n");
+        fclose(file);
+        return;
     }
 
-    while (current != NULL) {
+    int i = 0;
+    while (fgets(line, sizeof(line), file) != NULL) {
         indices[i] = i + 1;
         i++;
-        current = current->next;
     }
+
+    fclose(file);
 
     shuffle(indices, count);
 
-    current = head;
+    struct playlist *current = head;
     i = 0;
-    while (current != NULL && i < count) { 
+    while (current != NULL && i < count) {
         struct playlist *temp = current;
         current = current->next;
         struct playlist *swapNode = head;
@@ -569,7 +578,7 @@ void shufflePlaylist(struct playlist *head) {
         for (j = 0; j < indices[i] - 1; j++) {
             swapNode = swapNode->next;
         }
-        if (temp != swapNode) { 
+        if (temp != swapNode) {
             if (temp->prev != NULL) {
                 temp->prev->next = temp->next;
             }
@@ -588,6 +597,7 @@ void shufflePlaylist(struct playlist *head) {
 
     free(indices);
 }
+
 
 int main() {
     char username[30];
@@ -705,7 +715,7 @@ int main() {
                     printf("Song playback stopped.\n");
                     break;
                 } else if (kontrol == 4) {
-                    shufflePlaylist(head);
+                    shufflePlaylist(&head, "nama_file.txt");
                 } else {
                     printf("Invalid choice.\n");
                 }
