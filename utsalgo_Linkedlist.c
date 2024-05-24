@@ -525,78 +525,78 @@ void playSongFromPlaylist(char *playlistName, int songNumber) {
     }
 }
 
-// void shuffle(int *array, int n) {
-//     if (n > 1) {
-//         int i;
-//         for (i = 0; i < n - 1; i++) {
-//             int j = i + rand() / (RAND_MAX / (n - i) + 1);
-//             int temp = array[j];
-//             array[j] = array[i];
-//             array[i] = temp;
-//         }
-//     }
-// }
+void shuffle(int *array, int n) {
+    if (n > 1) {
+        int i;
+        for (i = 0; i < n - 1; i++) {
+            int j = i + rand() / (RAND_MAX / (n - i) + 1);
+            int temp = array[j];
+            array[j] = array[i];
+            array[i] = temp;
+        }
+    }
+}
 
-// void shufflePlaylist(struct playlist *head, const char *filename) {
-//     FILE *file = fopen("listlagu.txt", "r");
-//     if (file == NULL) {
-//         printf("Gagal membuka file.\n");
-//         return;
-//     }
+void shufflePlaylist(struct playlist *head, const char *filename) {
+    FILE *file = fopen("listlagu.txt", "r");
+    if (file == NULL) {
+        printf("Gagal membuka file.\n");
+        return;
+    }
 
-//     char line[100];
-//     int count = 0;
-//     while (fgets(line, sizeof(line), file) != NULL) {
-//         count++;
-//     }
-//     rewind(file);
+    char line[100];
+    int count = 0;
+    while (fgets(line, sizeof(line), file) != NULL) {
+        count++;
+    }
+    rewind(file);
 
-//     int *indices = (int *)malloc(count * sizeof(int));
-//     if (indices == NULL) {
-//         printf("Gagal alokasi memori.\n");
-//         fclose(file);
-//         return;
-//     }
+    int *indices = (int *)malloc(count * sizeof(int));
+    if (indices == NULL) {
+        printf("Gagal alokasi memori.\n");
+        fclose(file);
+        return;
+    }
 
-//     int i = 0;
-//     while (fgets(line, sizeof(line), file) != NULL) {
-//         indices[i] = i + 1;
-//         i++;
-//     }
+    int i = 0;
+    while (fgets(line, sizeof(line), file) != NULL) {
+        indices[i] = i + 1;
+        i++;
+    }
 
-//     fclose(file);
+    fclose(file);
 
-//     shuffle(indices, count);
+    shuffle(indices, count);
 
-//     struct playlist *current = head;
-//     i = 0;
-//     while (current != NULL && i < count) {
-//         struct playlist *temp = current;
-//         current = current->next;
-//         struct playlist *swapNode = head;
-//         int j;
-//         for (j = 0; j < indices[i] - 1; j++) {
-//             swapNode = swapNode->next;
-//         }
-//         if (temp != swapNode) {
-//             if (temp->prev != NULL) {
-//                 temp->prev->next = temp->next;
-//             }
-//             if (temp->next != NULL) {
-//                 temp->next->prev = temp->prev;
-//             }
-//             if (swapNode->next != NULL) {
-//                 swapNode->next->prev = temp;
-//             }
-//             temp->next = swapNode->next;
-//             temp->prev = swapNode;
-//             swapNode->next = temp;
-//         }
-//         i++;
-//     }
+    struct playlist *current = head;
+    i = 0;
+    while (current != NULL && i < count) {
+        struct playlist *temp = current;
+        current = current->next;
+        struct playlist *swapNode = head;
+        int j;
+        for (j = 0; j < indices[i] - 1; j++) {
+            swapNode = swapNode->next;
+        }
+        if (temp != swapNode) {
+            if (temp->prev != NULL) {
+                temp->prev->next = temp->next;
+            }
+            if (temp->next != NULL) {
+                temp->next->prev = temp->prev;
+            }
+            if (swapNode->next != NULL) {
+                swapNode->next->prev = temp;
+            }
+            temp->next = swapNode->next;
+            temp->prev = swapNode;
+            swapNode->next = temp;
+        }
+        i++;
+    }
 
-//     free(indices);
-// }
+    free(indices);
+}
 
 
 int main() {
