@@ -2,9 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <unistd.h>
-#include <time.h>
-#include <dirent.h>
 
 // Struktur untuk BST
 struct playlist {
@@ -76,12 +73,12 @@ void playQueue(Queue *q) {
 
 // Fungsi lainnya
 bool cekAkun(struct akun *head, const char *username, const char *password);
-void login(int kondisi, char username[30], char password[30]);
+void login(int *kondisi, char username[30], char password[30]);
 void createData(FILE *file, char baris[1000]);
 void createCustomPlaylist(char playlistNames[][50], int numPlaylists);
-void createPlaylist();
+void createPlaylist(struct playlist **playlistRoot);
 struct playlist *insertBST(struct playlist *root, char *judul, char *penyanyi, char *album, int tahun);
-void searchSong(struct playlist *root, char keyword[50]);
+struct playlist *searchSong(struct playlist *root, char keyword[50]);
 void readDatabase(struct akun **head);
 void addAcc(struct akun **head, const char *username, const char *password);
 bool cekAkun(struct akun *head, const char *username, const char *password);
@@ -89,21 +86,22 @@ void displayAllSongs(struct playlist *root);
 void playSong(struct playlist *song);
 
 // Implementasi fungsi lainnya
-void login(int kondisi, char username[30], char password[30]) {
+void login(int *kondisi, char username[30], char password[30]) {
     struct akun *akunHead = NULL;
     readDatabase(&akunHead);
     printf("1. Belum punya akun? buat sekarang!\n");
     printf("2. Sudah punya akun? login sekarang!\n");
-    printf("pilihan :"); scanf("%d", &kondisi);
+    printf("pilihan :");
+    scanf("%d", kondisi);
 
-    if (kondisi == 1) {
+    if (*kondisi == 1) {
         printf("================Register==============\n");
         printf("Username : ");
         scanf("%s", username);
         printf("\nPassword : ");
         scanf("%s", password);
         addAcc(&akunHead, username, password);
-    } else if (kondisi == 2) {
+    } else if (*kondisi == 2) {
         printf("================Login==============\n");
         printf("Username : ");
         scanf("%s", username);
@@ -111,15 +109,8 @@ void login(int kondisi, char username[30], char password[30]) {
         scanf("%s", password);
         if (!cekAkun(akunHead, username, password)) {
             printf("Username atau password salah.\n");
-            return main();
+            exit(0);
         }
-    }
-}
-
-void createData(FILE *file, char baris[1000]) {
-    char barisArray[1000];
-    while (fgets(barisArray, sizeof(barisArray), file) != NULL) {
-        printf("%s", barisArray);
     }
 }
 
@@ -135,7 +126,7 @@ void createCustomPlaylist(char playlistNames[][50], int numPlaylists) {
     }
 }
 
-void createPlaylist() {
+void createPlaylist(struct playlist **playlistRoot) {
     int songLength = 100;
     char titleLength = 50;
     char artistLength = 50;
@@ -153,6 +144,14 @@ void createPlaylist() {
     scanf("%d", &choice);
 
     if (choice == 1) {
+        printf("Masukkan jumlah playlist yang ingin dibuat: ");
+        scanf("%d", &numPlaylists);
+        getchar();
+        for (int i = 0; i < numPlaylists; i++) {
+            printf("Masukkan nama playlist ke-%d: ", i + 1);
+            fgets(playlistNames[i], sizeof(playlistNames[i]), stdin);
+            strtok(playlistNames[i], "\n");
+        }
         createCustomPlaylist(playlistNames, numPlaylists);
     }
 
@@ -176,11 +175,16 @@ void createPlaylist() {
         fgets(playlist[i].penyanyi, artistLength, stdin);
         strtok(playlist[i].penyanyi, "\n");
 
+        printf("Masukkan nama album untuk lagu ke-%d: ", i + 1);
+        fgets(playlist[i].album, titleLength, stdin);
+        strtok(playlist[i].album, "\n");
+
         printf("Masukkan tahun rilis untuk lagu ke-%d: ", i + 1);
         scanf("%d", &playlist[i].tahun);
         getchar();
 
-        fprintf(file, "%s#%s#(%d)\n", playlist[i].judul, playlist[i].penyanyi, playlist[i].tahun);
+        fprintf(file, "%s#%s#%s#%d\n", playlist[i].judul, playlist[i].penyanyi, playlist[i].album, playlist[i].tahun);
+        *playlistRoot = insertBST(*playlistRoot, playlist[i].judul, playlist[i].penyanyi, playlist[i].album, playlist[i].tahun);
     }
 
     printf("Playlist berhasil ditambahkan ke file.\n");
@@ -205,18 +209,20 @@ struct playlist *insertBST(struct playlist *root, char *judul, char *penyanyi, c
     return root;
 }
 
-void searchSong(struct playlist *root, char keyword[50]) {
+struct playlist *searchSong(struct playlist *root, char keyword[50]) {
     if (root == NULL)
-        return;
+        return NULL;
     if (strstr(root->judul, keyword) != NULL || strstr(root->penyanyi, keyword) != NULL || strstr(root->album, keyword) != NULL) {
         printf("Title: %s\n", root->judul);
         printf("Artist: %s\n", root->penyanyi);
         printf("Album: %s\n", root->album);
         printf("Year: %d\n", root->tahun);
         printf("-----------------------------------------\n");
+        return root;
     }
-    searchSong(root->left, keyword);
-    searchSong(root->right, keyword);
+    struct playlist *leftSearch = searchSong(root->left, keyword);
+    if (leftSearch != NULL) return leftSearch;
+    return searchSong(root->right, keyword);
 }
 
 void readDatabase(struct akun **head) {
@@ -285,7 +291,7 @@ void playSong(struct playlist *song) {
 
 int main() {
     struct playlist *playlistRoot = NULL;
-    int pilihHome, kondisi;
+    int pilihHome, kondisi = 0;
     char username[30], password[30], keyword[50];
     Queue *songQueue = createQueue();
 
@@ -302,7 +308,7 @@ int main() {
     }
     fclose(file);
 
-    login(kondisi, username, password);
+    login(&kondisi, username, password);
 
     do {
         printf("1. Search Song\n");
@@ -321,7 +327,7 @@ int main() {
                 searchSong(playlistRoot, keyword);
                 break;
             case 2:
-                createPlaylist();
+                createPlaylist(&playlistRoot);
                 break;
             case 3:
                 displayAllSongs(playlistRoot);
