@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-// Struktur untuk BST
+
 struct playlist {
     char judul[50];
     char penyanyi[50];
     char album[50];
     int tahun;
-    struct playlist *left, *right; // BST pointers
+    struct playlist *left, *right;
 };
 
 // Struktur untuk akun
