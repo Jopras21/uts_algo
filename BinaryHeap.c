@@ -26,6 +26,15 @@ struct minHeap {
     int capacity;
 };
 
+// Heap functions
+struct minHeap* createMinHeap(int capacity) {
+    struct minHeap *heap = (struct minHeap*)malloc(sizeof(struct minHeap));
+    heap->songs = (struct playlist**)malloc(capacity * sizeof(struct playlist*));
+    heap->size = 0;
+    heap->capacity = capacity;
+    return heap;
+}
+
 bool cekAkun(struct akun *head, const char *username, const char *password);
 
 void readDatabase(struct akun **head);
@@ -36,7 +45,7 @@ void searchSong(struct playlist *root, char keyword[50]);
 void displayExistingPlaylists();
 void deletePlaylistFromFile(const char *filename);
 void addSongToPlaylist(const char *playlistFilename, struct minHeap *heap);
-void removeSongFromPlaylist(const char *playlistFilename, int songNumber, struct minHeap *heap);
+void removeSongFromPlaylist(const char *playlistFilename, struct playlist *displayOrder[], int songCount, int songNumber);
 void displayPlaylist(const char *playlistFilename, struct playlist *displayOrder[], int *songCount);
 void playlist(int pilihhome, int *pilihPlaylist, struct playlist *root, struct minHeap *heap);
 void playSong(struct playlist *song);
@@ -341,7 +350,12 @@ void addSongToPlaylist(const char *playlistFilename, struct minHeap *heap) {
     printf("Lagu berhasil ditambahkan ke playlist.\n");
 }
 
-void removeSongFromPlaylist(const char *playlistFilename, int songNumber, struct minHeap *heap) {
+void removeSongFromPlaylist(const char *playlistFilename, struct playlist *displayOrder[], int songCount, int songNumber) {
+    if (songNumber < 1 || songNumber > songCount) {
+        printf("Nomor lagu tidak valid.\n");
+        return;
+    }
+
     FILE *file = fopen(playlistFilename, "r");
     if (file == NULL) {
         printf("Gagal membuka playlist.\n");
@@ -356,12 +370,16 @@ void removeSongFromPlaylist(const char *playlistFilename, int songNumber, struct
         return;
     }
 
+    struct playlist *songToDelete = displayOrder[songNumber - 1];
     char buffer[1000];
-    int count = 0;
 
     while (fgets(buffer, sizeof(buffer), file) != NULL) {
-        count++;
-        if (count != songNumber) {
+        struct playlist tempSong;
+        sscanf(buffer, "%[^#]#%[^#]#%[^#]#%d", tempSong.judul, tempSong.penyanyi, tempSong.album, &tempSong.tahun);
+        if (strcmp(tempSong.judul, songToDelete->judul) != 0 ||
+            strcmp(tempSong.penyanyi, songToDelete->penyanyi) != 0 ||
+            strcmp(tempSong.album, songToDelete->album) != 0 ||
+            tempSong.tahun != songToDelete->tahun) {
             fputs(buffer, tempFile);
         }
     }
@@ -372,7 +390,6 @@ void removeSongFromPlaylist(const char *playlistFilename, int songNumber, struct
     if (remove(playlistFilename) == 0) {
         if (rename(tempFilename, playlistFilename) == 0) {
             printf("Lagu berhasil dihapus dari playlist.\n");
-            deleteMinHeap(heap);
         } else {
             printf("Gagal mengubah nama file.\n");
         }
@@ -381,20 +398,19 @@ void removeSongFromPlaylist(const char *playlistFilename, int songNumber, struct
     }
 }
 
+
 void displayPlaylist(const char *playlistFilename, struct playlist *displayOrder[], int *songCount) {
     FILE *file = fopen(playlistFilename, "r");
     if (file != NULL) {
         char buffer[100];
-        struct minHeap *tempHeap = createMinHeap(100);  // Create a temporary heap to sort songs
+        struct minHeap *tempHeap = createMinHeap(100);  
 
-        // Read songs from file and insert into heap
         while (fgets(buffer, sizeof(buffer), file)) {
             struct playlist *song = (struct playlist*)malloc(sizeof(struct playlist));
             sscanf(buffer, "%[^#]#%[^#]#%[^#]#%d", song->judul, song->penyanyi, song->album, &song->tahun);
             insertHeap(tempHeap, song);
         }
 
-        // Display songs in ASCII order using min-heap
         printf("===============================================================================================================================\n");
         printf("| %-2s | %-30s | %-30s | %-43s | %-7s |\n", "No", "Judul", "Penyanyi", "Album", "Tahun");
         printf("===============================================================================================================================\n");
@@ -481,7 +497,7 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *root, struct m
                         int songNumber;
                         printf("Masukkan nomor lagu yang ingin dihapus dari playlist: ");
                         scanf("%d", &songNumber);
-                        removeSongFromPlaylist(playlistNames[*pilihPlaylist - 1], songNumber, heap);
+                        removeSongFromPlaylist(playlistNames[*pilihPlaylist - 1], displayOrder, songCount, songNumber);
                         break;
                     }
 
@@ -503,6 +519,7 @@ void playlist(int pilihhome, int *pilihPlaylist, struct playlist *root, struct m
         printf("Pilihan tidak valid.\n");
     }
 }
+
 
 void playSong(struct playlist *song) {
     printf("\nNow Playing: %s\n", song->judul);
@@ -606,36 +623,6 @@ void displaySongs(struct minHeap *heap) {
     }
 }
 
-// Heap functions
-struct minHeap* createMinHeap(int capacity) {
-    struct minHeap *heap = (struct minHeap*)malloc(sizeof(struct minHeap));
-    heap->songs = (struct playlist**)malloc(capacity * sizeof(struct playlist*));
-    heap->size = 0;
-    heap->capacity = capacity;
-    return heap;
-}
-
-void heapify(struct minHeap *heap, int i) {
-    int smallest = i;
-    int left = 2 * i + 1;
-    int right = 2 * i + 2;
-
-    if (left < heap->size && strcmp(heap->songs[left]->judul, heap->songs[smallest]->judul) < 0) {
-        smallest = left;
-    }
-
-    if (right < heap->size && strcmp(heap->songs[right]->judul, heap->songs[smallest]->judul) < 0) {
-        smallest = right;
-    }
-
-    if (smallest != i) {
-        struct playlist *temp = heap->songs[i];
-        heap->songs[i] = heap->songs[smallest];
-        heap->songs[smallest] = temp;
-        heapify(heap, smallest);
-    }
-}
-
 void insertHeap(struct minHeap *heap, struct playlist *song) {
     if (heap->size == heap->capacity) {
         printf("Heap overflow\n");
@@ -668,6 +655,28 @@ struct playlist* deleteMinHeap(struct minHeap *heap) {
 
     return root;
 }
+
+void heapify(struct minHeap *heap, int i) {
+    int smallest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < heap->size && strcmp(heap->songs[left]->judul, heap->songs[smallest]->judul) < 0) {
+        smallest = left;
+    }
+
+    if (right < heap->size && strcmp(heap->songs[right]->judul, heap->songs[smallest]->judul) < 0) {
+        smallest = right;
+    }
+
+    if (smallest != i) {
+        struct playlist *temp = heap->songs[i];
+        heap->songs[i] = heap->songs[smallest];
+        heap->songs[smallest] = temp;
+        heapify(heap, smallest);
+    }
+}
+
 
 int main() {
     char username[30];
