@@ -188,12 +188,13 @@ void searchSong(struct playlist *root, char keyword[50]) {
     printf("2. Interpolation Search\n");
     printf("Pilihan: ");
     scanf("%d", &searchOption);
-    getchar();
-
-    struct playlist *result = NULL;
+    getchar();  // Clear newline character left by scanf
 
     printf("Enter keyword to search: ");
-    scanf("%s", keyword);
+    fgets(keyword, 50, stdin);
+    keyword[strcspn(keyword, "\n")] = '\0';  // Remove newline character
+
+    struct playlist *result = NULL;
 
     if (searchOption == 1) {
         result = binarySearch(arr, 0, count - 1, keyword);
@@ -664,7 +665,7 @@ struct playlist* binarySearch(struct playlist *arr[], int low, int high, const c
     if (high >= low) {
         int mid = low + (high - low) / 2;
 
-        if (strstr(arr[mid]->judul, keyword) != NULL)
+        if (strcmp(arr[mid]->judul, keyword) == 0)
             return arr[mid];
 
         if (strcmp(arr[mid]->judul, keyword) > 0)
@@ -680,7 +681,7 @@ struct playlist* interpolationSearch(struct playlist *arr[], int n, const char *
 
     while (low <= high && strcmp(keyword, arr[low]->judul) >= 0 && strcmp(keyword, arr[high]->judul) <= 0) {
         if (low == high) {
-            if (strstr(arr[low]->judul, keyword) != NULL) return arr[low];
+            if (strcmp(arr[low]->judul, keyword) == 0) return arr[low];
             return NULL;
         }
 
@@ -688,7 +689,7 @@ struct playlist* interpolationSearch(struct playlist *arr[], int n, const char *
               (strcmp(arr[high]->judul, arr[low]->judul))) *
               (strcmp(keyword, arr[low]->judul)));
 
-        if (strstr(arr[pos]->judul, keyword) != NULL)
+        if (strcmp(arr[pos]->judul, keyword) == 0)
             return arr[pos];
 
         if (strcmp(arr[pos]->judul, keyword) < 0)
@@ -752,13 +753,14 @@ int main() {
         printf("6. Logout\n");
         printf("Pilihan : ");
         scanf("%d", &pilihHome);
+        getchar();  // Clear newline character left by scanf
 
         if (pilihHome == 1) {
             searchSong(root, keyword);
         } else if (pilihHome == 2) {
             playlist(pilihHome, &pilihPlaylist, root);
         } else if (pilihHome == 3) {
-            system("cls");;
+            system("cls");
             displaySongs(root);
         } else if (pilihHome == 4) {
             createPlayList();
